@@ -1,4 +1,4 @@
-ITEMS   := rules html data public img js manifest.json
+ITEMS   := shared/rules shared/html shared/data public shared/img shared/js
 
 release: npm grunt tosdr moveout
 
@@ -8,14 +8,14 @@ npm:
 	npm install --tldjs-update-rules
 
 grunt:
-	grunt build
+	grunt build --browser=$(browser)
 
 tosdr:
-	grunt execute:tosdr
+	grunt execute:tosdr --browser=$(browser)
 
 moveout: $(ITEMS)
-	rm -rf release
-	mkdir release
-	cp -r $(ITEMS) release/
-	find ./release -type f -name '*.es6.js' -delete
-	rm -rf ./release/js/ui
+	rm -rf browsers/$(browser)
+	mkdir browsers/$(browser)
+	cp -r $(ITEMS) browsers/$(browser)
+	find ./browsers/$(browser)/js -type f -name '*.es6.js' -delete
+	rm -rf ./browsers/$(browser)/js/ui
