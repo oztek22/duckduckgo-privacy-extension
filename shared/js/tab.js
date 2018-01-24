@@ -63,8 +63,25 @@ class Tab {
             end: null,
             completeMs: null
         }
+
+        // check to see if the site is a major tracking network. We can't block
+        // the first party request but we can still show the site as a tracker
+        // in the popup
+        this.checkForMajorTrackingNetwork()
+
         // set the new tab icon to the dax logo
         chrome.browserAction.setIcon({path: 'img/icon_48.png', tabId: tabData.tabId})
+    };
+
+    checkForMajorTrackingNetwork() {
+        // find the parent company info. This is important so we can
+        // relate sites like google.ca back to google.com
+        let parent = trackers.getTrackerDetails(this.url)
+
+        // see if parent is a major network and count it as a tracker on the page
+        if (constants.majorTrackingNetworks[parent.parentCompany.toLowerCase()]) {
+            this.addToTrackers(parent)
+        }
     };
 
     updateBadgeIcon () {

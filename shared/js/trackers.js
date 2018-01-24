@@ -258,7 +258,8 @@ require.scopes.trackers = (function() {
     }
 
     return {
-        isTracker: isTracker
+        isTracker: isTracker,
+        getTrackerDetails: getTrackerDetails
     }
 
 })()
