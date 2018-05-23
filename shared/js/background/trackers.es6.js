@@ -29,7 +29,7 @@ function loadLists () {
  */
 function isTracker (urlToCheck, thisTab, request) {
     let currLocation = thisTab.url || ''
-    let siteDomain = thisTab.site ? thisTab.site.domain : ''
+    var siteDomain = thisTab.site ? thisTab.site.domain : ''
     if (!siteDomain) return
 
     // DEMO embedded tweet option
@@ -112,16 +112,18 @@ function checkTrackerLists (blockSettings, urlSplit, currLocation, urlToCheck, r
     // Look up trackers by parent company. This function also checks to see if the poential
     // tracker is related to the current site. If this is the case we consider it to be the
     // same as a first party requrest and return
-    var trackerByParentCompany = checkTrackersWithParentCompany(blockSettings, urlSplit, currLocation)
+    var trackerByParentCompany = checkTrackersWithParentCompany(blockSettings, urlSplit, urlToCheck, siteDomain)
     if (trackerByParentCompany) {
         return trackerByParentCompany
     }
 
     // block trackers from easylists
+    /*
     let easylistBlock = checkEasylists(urlToCheck, siteDomain, request)
     if (easylistBlock) {
         return easylistBlock
     }
+    */
 }
 
 function checkWhitelist (url, currLocation, request) {
@@ -183,15 +185,16 @@ function checkSurrogateList (url, parsedUrl, currLocation) {
     return false
 }
 
-function checkTrackersWithParentCompany (blockSettings, url, currLocation) {
+function checkTrackersWithParentCompany (blockSettings, splitURL, fullURL, siteDomain) {
     var toBlock
 
     // base case
-    if (url.length < 2) { return false }
+    if (splitURL.length < 2) { return false }
 
-    let trackerURL = url.join('.')
+    let trackerURL = splitURL.join('.')
 
     blockSettings.some(function (trackerType) {
+        let siteDomain = this
         // Some trackers are listed under just the host name of their parent company without
         // any subdomain. Ex: ssl.google-analytics.com would be listed under just google-analytics.com.
         // Other trackers are listed using their subdomains. Ex: developers.google.com.
@@ -199,28 +202,66 @@ function checkTrackersWithParentCompany (blockSettings, url, currLocation) {
         // try pulling off the subdomain and checking again.
         if (trackerLists.trackersWithParentCompany[trackerType]) {
             var tracker = trackerLists.trackersWithParentCompany[trackerType][trackerURL]
+            let match = false
+
             if (tracker) {
                 toBlock = {
                     parentCompany: tracker.c,
                     url: trackerURL,
                     type: trackerType,
                     block: true,
-                    reason: 'trackersWithParentCompany'
+                    reason: 'trackersWithParentCompany',
+                    filter: ''
                 }
 
-                return toBlock
+                // this tracker has specific filters to check
+                if (tracker.filters) {
+                    // check host filters
+                    tracker.filters.hostAnchor.forEach(filter => {
+                        if (fullURL.match(filter.f)) {
+                            match = true
+                            toBlock.filter = filter
+                            return
+                        }
+                    })
+
+                    // check regex filters
+                    tracker.filters.regex.forEach(filter => {
+                        let re = new RegExp(filter.f)
+                        if (re.exec(fullURL)) {
+                            if (filter.whitelist) {
+                                let whitelisted = filter.whitelist.find(w => { return w === siteDomain} )
+                                if (whitelisted) {
+                                    toBlock.block = false
+                                    toBlock.reason = 'whitelisted'
+                                }
+                            }
+                            match = true
+                            toBlock.filter = filter
+                            return
+                        }
+                    })
+                } else {
+                    // if we don't have filters then block all third party requests from this domain
+                    match = true
+                }
+
+                if (!match) {
+                    toBlock = null
+                }
             }
         }
-    })
+    }, siteDomain)
 
     if (toBlock) {
+        console.log(`Blocking: ${JSON.stringify(toBlock)}`)
         return toBlock
     } else {
         // remove the subdomain and recheck for trackers. This is recursive, we'll continue
         // to pull off subdomains until we either find a match or have no url to check.
         // Ex: x.y.z.analytics.com would be checked 4 times pulling off a subdomain each time.
-        url.shift()
-        return checkTrackersWithParentCompany(blockSettings, url, currLocation)
+        splitURL.shift()
+        return checkTrackersWithParentCompany(blockSettings, splitURL, fullURL, siteDomain)
     }
 }
 

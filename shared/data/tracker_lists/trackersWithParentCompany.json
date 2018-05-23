@@ -7454,5 +7454,57 @@
             "c": "Google",
             "u": "http://www.google.com/"
         }
+    },
+    "Social": {
+        "facebook.com": {
+            "c": "Facebook",
+            "u": "https://facebook.com",
+            "filters": {
+                "hostAnchor": [
+                    {"f": "facebook.com/ai.php?"},
+                    {"f": "facebook.com/audience_network/", "t": "image"},
+                    {"f": "facebook.com/brandlift.php"},
+                    {"f": "facebook.com/common/scribe_endpoint.php"},
+                    {"f": "facebook.com/email_open_log_pic.php"},
+                    {"f": "facebook.com/fr/u.php?"},
+                    {"f": "facebook.com/js/conversions/tracking.js"},
+                    {"f": "facebook.com/method/links.getStats?"},
+                    {"f": "facebook.com/offsite_event.php"},
+                    {"f": "facebook.com/rtb_impression/?"},
+                    {"f": "facebook.com/rtb_video/?"},
+                    {"f": "facebook.com/tr"},
+                    {"f": "facebook.com/ct.php"},
+                    {"f": "facebook.com/friends/requests/log_impressions"},
+                    {"f": "facebook.com/search/web/instrumentation.php?"},
+                    {"f": "facebook.com/xti.php?"},
+                    {"f": "facebook.com/audiencenetwork/"},
+                    {"f": "facebook.com/video/instream_video/", "t": "xmlhttprequest"}
+                ],
+                "regex": [
+                    {"f": "pixel.facebook.com($|[?/])"},
+                    {"f": "facebook.com.*/impression.php", "whitelist": ["thehill.com"]}
+                ]
+            }
+        },
+        "twitter.com": {
+            "c": "Twitter",
+            "u": "https://twitter.com",
+            "filters": {
+                "hostAnchor": [ 
+                    {"f": "twitter.com/i/jot"},
+                    {"f": "twitter.com/jot.html"},
+                    {"f": "twitter.com/oct.js"},
+                    {"f": "twitter.com/scribe"},
+                    {"f": "twitter.com/abacus?"},
+                    {"f": "twitter.com/i/csp_report?"},
+                    {"f": "platform.twitter.com/impressions.js"}
+                ],
+                "regex": [
+                    {"f": "analytics.twitter.com($|[?/])"},
+                    {"f": "scribe.twitter.com($|[?/])"},
+                    {"f": "twitter.com($|[?/].*/anonymize?data)"}
+                ]
+            }
+        }
     }
 }
